@@ -4,7 +4,7 @@
 
 Set-ExecutionPolicy RemoteSigned
 . { iwr -useb http://boxstarter.org/bootstrapper.ps1 } | iex; get-boxstarter -Force
-Install-BoxstarterPackage -PackageName https://bit.ly/protostarter.1
+Install-BoxstarterPackage -PackageName https://bit.ly/protohaven-boxstart
 
 NOTES:
 - The github gist raw link is different on every single revision so a new bitly link needs to be created for each one.  
