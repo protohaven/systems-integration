@@ -154,7 +154,7 @@ $BypassDefenderPaths = @('C:\_ByPassDefender')
 # some manual installs
 $ManualDownloadInstall = @{
    'wallpaper.jpg' = 'https://protohaven.org/wiki/_media/files/protohaven_dark_background_warning.png'
-   'StartMenu.xml' = 'https://gist.github.com/jeffbearer/1772c402cc5de9e74a5c8989de650740/raw/2994e3f432fee2b3389b4ea0f51a0916377c5737/StartMenu.xml'
+   'StartMenu.xml' = 'https://raw.githubusercontent.com/protohaven/systems-integration/main/boxstarter/StartMenu.xml'
    'Pacifico.zip' = 'https://fonts.google.com/download?family=Pacifico'
    'Nunito.zip' = 'https://fonts.google.com/download?family=Nunito'
    'CH341SER.EXE' = 'https://cdn.sparkfun.com/assets/learn_tutorials/8/4/4/CH341SER.EXE'
