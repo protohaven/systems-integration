@@ -5,7 +5,11 @@ Because Neon's API is a little different we have to do this 1 line patch so that
 The access token that is returned is the user id and to retreive user account info you need to send a request to the accounts api ie:
 https://<orgid>:<apikey>@api.neoncrm.com/v2/accounts/<access_tokem>
 
-The supplied patch changes the user query to match this.
+How to install Patch:
+Copy action.patch to `~/www/wiki/lib/plugins/oauthgeneric/`
+Then run `patch action.php action.patch`
+
+
 
 Neon CRM's Oauth (https://developer.neoncrm.com/authenticating-constituents/)
 
