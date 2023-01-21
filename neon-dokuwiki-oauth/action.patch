@@ -1,0 +1,14 @@
+--- action.php.orig     2022-11-23 11:04:51.674571129 -0500
++++ action.php  2023-01-16 12:17:30.191999446 -0500
+@@ -22,7 +22,12 @@
+         $oauth = $this->getOAuthService();
+         $data = array();
+
+-        $url = $this->getConf('userurl');
++        # Protohaven Customisation to handle Neon One API Call
++        $access_token =  $oauth->getStorage()->retrieveAccessToken($oauth->service());
++        $url = $this->getConf('userurl') ."/". $access_token->getAccessToken();
++
+         $raw = $oauth->request($url);
+
+         if (!$raw) throw new OAuthException('Failed to fetch data from userurl');
