@@ -2975,7 +2975,7 @@ Install-ChocolateyFont $UtilDownloadPath -multiple
 
 
 # Install StartMenu Map
-$StartLayoutPath = "C:\Utilities\Downloads\protohavenstart.xml"
+$StartLayoutPath = "C:\Utilities\Downloads\StartMenu.xml"
 
 Import-StartLayout -LayoutPath $StartLayoutPath -MountPath 'C:\'
 New-Item -Path HKCU:\SOFTWARE\Policies\Microsoft\Windows -Name Explorer -ErrorAction SilentlyContinue
