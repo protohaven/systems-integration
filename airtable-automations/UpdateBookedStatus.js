@@ -1,73 +1,76 @@
+// When Tool status changes update reservable status in Booked Scheduler
+// Trigger when status field changes on tools.
+//
+// Setup:
+// -Automation for Tools & Equipment Base that is watching the Current Status field of the Grid view of the Tool Records Table
+//
+// Input variables to configure:
+// - username = api username from airtable
+// - password = api password from airtable
+// - bookedResourceId = mapped to BookedResourceId in table
+// - status = mapped to Current Status in table
+
+
+// Get credentials from input variables
+let inputVars = input.config();
+
 const baseUrl = "https://reserve.protohaven.org";
+let authUrl = baseUrl + "/Web/Services/Authentication/Authenticate"
+let updateUrl = baseUrl + "/Web/Services/Resources/" + inputVars.bookedResourceId
 
-let response = await fetch(baseUrl + "/Web/Services/Authentication/Authenticate", {
+const { ip } = await fetch('https://api.ipify.org?format=json', { method: 'GET' })
+        .then(res => res.json())
+        .catch(error => console.error(error));
+
+console.debug("Client IP:", ip)
+console.debug("Time:", Date())    
+
+// Prepare login object
+let loginPost = {
     method: 'POST',
-    body: JSON.stringify({username: "airtableApiUser", password: "airtableAPI123"}),
-    headers: {
-        'Content-Type': 'application/json',
+    headers: { 
+        'Content-Type': 'application/json'
     },
-});
+    body: JSON.stringify({
+            "username": inputVars.username,
+            "password": inputVars.password
+        })
+}
+console.debug("loginPost", loginPost)
 
-let resp = await response.json()
+// Authenticate and get sesisonToken
+let authResponse = await fetch(authUrl, loginPost)
+let auth = await authResponse.json()
+console.debug("authResponse", authResponse)
+console.debug("auth", auth)
 
-let authHeaders = {"X-Booked-SessionToken": resp.sessionToken, "X-Booked-UserId": resp.userId}
-
-let response2 = await fetch(baseUrl + "/Web/Services/Resources/", {
-    method: 'GET',
-    headers: authHeaders,
-});
-
-let resourcesResp = await response2.json()
-
-var resources = {}
-for (var r = 0; r < resourcesResp.resources.length; r++) {
-    var res = resourcesResp.resources[r]
-    resources[res.resourceId] = res
+if (auth.sessionToken == null) { 
+    throw auth.message
 }
 
-function getBookedEquivStatus(airtableStatus){
-    // Map the airtable status into a booked status
-    // Green/Yellow Status in Airtable -> "Available" in booked
-    // Red/Blue Status in Airtable -> "Unvailable" in booked
-    if (airtableStatus.startsWith("Green") || airtableStatus.startsWith("Yellow")){
-        return 1 // Booked Status Code for Available
-    } else {
-        return 2 // Booked Status Code for Unvailable
-    }
+
+
+console.debug("status",inputVars.status.startsWith("Green"))
+if (inputVars.status.startsWith("Green") || inputVars.status.startsWith("Yellow")){
+    var bookedStatus = 1;
+} else {
+    var bookedStatus = 2;
 }
 
-let table = base.getTable("Equipment Records")
-let view = table.getView("Alphabetized Equipment")
+console.log("Setting " + inputVars.bookedResourceId + " to status " + bookedStatus)
 
-let queryResult = await view.selectRecordsAsync({fields:["Tool Name", "BookedResourceId", "Maintenance Status"]})
-
-for (var i=0; i < resourcesResp.resources.length; i++){
-    var equip = queryResult.records[i]
-    var bookedId = parseInt(equip.getCellValueAsString("BookedResourceId"))
-
-    if (!isNaN(bookedId)){   
-        var currentStatus = resources[bookedId]["statusId"]
-        var newStatus = getBookedEquivStatus(equip.getCellValueAsString("Maintenance Status")).toString()
-        
-        if (currentStatus != newStatus){    
-
-            var body = {
-                'statusId': newStatus, 
-                'scheduleId': resources[bookedId]["scheduleId"],
-                'name': resources[bookedId]["name"]
-            }
-
-            var resp3 = await fetch(baseUrl + "/Web/Services/Resources/" + bookedId, {
-                method: 'POST',
-                body: JSON.stringify(body),
-                headers: authHeaders,
-            });
-
-            var updateResp = await resp3.json()
-            console.log(updateResp)
-
-        }
-        
-    }
-
+// Prepare update object
+let updatePost = {
+    method: 'POST',
+    headers: {
+        "X-Booked-SessionToken": auth.sessionToken, 
+        "X-Booked-UserId": auth.userId
+    },
+    body: JSON.stringify({
+        "statusId": bookedStatus
+    })
 }
+console.debug(updatePost)
+
+var updateResponse = await fetch(updateUrl, updatePost)
+console.log(updateResponse)
