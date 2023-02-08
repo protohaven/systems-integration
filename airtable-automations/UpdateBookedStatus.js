@@ -18,14 +18,7 @@ const baseUrl = "https://reserve.protohaven.org";
 let authUrl = baseUrl + "/Web/Services/Authentication/Authenticate"
 let updateUrl = baseUrl + "/Web/Services/Resources/" + inputVars.bookedResourceId
 
-const { ip } = await fetch('https://api.ipify.org?format=json', { method: 'GET' })
-        .then(res => res.json())
-        .catch(error => console.error(error));
-
-console.debug("Client IP:", ip)
-console.debug("Time:", Date())    
-
-// Prepare login object
+// Prepare login post
 let loginPost = {
     method: 'POST',
     headers: { 
@@ -48,9 +41,6 @@ if (auth.sessionToken == null) {
     throw auth.message
 }
 
-
-
-console.debug("status",inputVars.status.startsWith("Green"))
 if (inputVars.status.startsWith("Green") || inputVars.status.startsWith("Yellow")){
     var bookedStatus = 1;
 } else {
