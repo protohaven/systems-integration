@@ -2,10 +2,10 @@
 // Sync Member Data on a schedule
 //
 // Setup:
-// -Automation for Tools & Equipment Base that is watching the Current Status field of the Grid view of the Tool Records Table
+// - Create an empty "Members" table in the Neon base
 //
 // Input variables to configure:
-// - apikey = api key for neon
+// - apikey = b64 encoded api key for neon
 
 
 async function getPaginatedData(endpoint, dataKey, headers){
@@ -55,19 +55,35 @@ function formatEntry(memberData){
   entry["email"] = memberData["Email 1"]
   entry["company"] = memberData["Company Name"]
 
-  var status = memberData["Account Current Membership Status"]
-  if (status == ""){
-    status = "Inactive"
+  var membershipType = memberData["Membership Name"]
+  if (!membershipType){
+    membershipType = "No Membership"
   }
+  var status = memberData["Account Current Membership Status"]
+  var expDate = memberData["Membership Expiration Date"]
+  if (status == ""){
+    status = "No Membership"
+    expDate = "2023-01-01"
+  }
+  entry["membershipType"] = membershipType
   entry["membershipStatus"] = status
+  entry["expirationDate"] = expDate
   
   return entry
+}
+
+async function deleteRecordsFromQueue(recordQueue){
+  for ( var batch of recordQueue){
+    console.debug("Delete Batch", batch)
+    await membersTable.deleteRecordsAsync(batch)
+  }
 }
 
 async function updateRecordsFromQueue(recordQueue){
 // The record queue contains batches of 50 so that we can do an updateRecordsAsync
 
   for (var batch of recordQueue){
+    console.debug("Update Batch", batch)
     await membersTable.updateRecordsAsync(batch)
   }
 
@@ -77,6 +93,7 @@ async function createRecordsFromQueue(recordQueue){
 // The record queue contains batches of 50 so that we can do an createRecordsAsync
 
   for (var batch of recordQueue){
+    console.debug("Create Batch", batch)
     await membersTable.createRecordsAsync(batch)
   }
 
@@ -89,11 +106,6 @@ let authHeaders = {
         'Content-Type': 'application/json',
         'Authorization': 'Basic ' + inputVars.encodedapikey
     }
-
-let getHeaders = {
-    method: 'GET',
-    headers: authHeaders,
-}
 
 // Get All Accounts
 
@@ -113,7 +125,9 @@ let memberSearchHeaders = {
       "Last Name",
       "Company Name",
       "Email 1",
-      "Account Current Membership Status"
+      "Membership Name",
+      "Account Current Membership Status",
+      "Membership Expiration Date"
     ],
     "pagination": {
       "currentPage": 0,
@@ -132,7 +146,7 @@ for (var member of membershipData){
 let membersTable = base.getTable("Members")
 
 // grab the existing users
-let existingMembers = await membersTable.selectRecordsAsync(
+var existingMembers = await membersTable.selectRecordsAsync(
   {"fields": 
     [
       "Member", 
@@ -141,15 +155,56 @@ let existingMembers = await membersTable.selectRecordsAsync(
       "lastName",
       "company",
       "email",
+      "membershipType",
       "membershipStatus"
     ]
   }
 )
 
 // update information for all existing members
+
+console.debug("Building Delete Batch")
+let deleteQueue = []
+let deleteBatch = []
+for (member of existingMembers.records){
+  let memberNeonId = member.getCellValueAsString("Id")
+
+  if(!membershipInfo[memberNeonId]){
+    let deleteMemberInfo = member
+    deleteBatch = deleteBatch.concat(deleteMemberInfo)
+  }
+  if (deleteBatch.length == 50){
+    deleteQueue = deleteQueue.concat([deleteBatch])
+    deleteBatch = []
+  }
+}
+deleteQueue = deleteQueue.concat([deleteBatch])
+
+//process deletes
+await deleteRecordsFromQueue(deleteQueue)
+console.log("Deleted records:")
+console.log(deleteQueue)
+
+// grab the existing users
+delete existingMembers
+var existingMembers = await membersTable.selectRecordsAsync(
+  {"fields": 
+    [
+      "Member", 
+      "Id",
+      "firstName",
+      "lastName",
+      "company",
+      "email",
+      "membershipType",
+      "membershipStatus"
+    ]
+  }
+)
+
+console.debug("Building Update Batch")
 let updateQueue = []
 let updateBatch = []
-
 for (member of existingMembers.records){
   let memberNeonId = member.getCellValueAsString("Id")
   let updatedMemberInfo = {
@@ -158,6 +213,7 @@ for (member of existingMembers.records){
   }
   delete (membershipInfo[memberNeonId])
   updateBatch = updateBatch.concat(updatedMemberInfo)
+
   if (updateBatch.length == 50){
     updateQueue = updateQueue.concat([updateBatch])
     updateBatch = []
@@ -168,6 +224,7 @@ updateQueue = updateQueue.concat([updateBatch])
 // Insert new entries into the table
 let createQueue = []
 let createBatch = []
+console.debug("Building Create Batch")
 for (member in membershipInfo) {
   createBatch = createBatch.concat(
     {
