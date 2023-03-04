@@ -52,6 +52,7 @@ function formatEntry(eventData){
     entry["Id"] = parseInt(eventData["Event ID"])
     entry["Name"] = eventData["Event Name"]
     entry["summary"] = eventData["Event Summary"]
+    entry["registrantCount"] = parseInt(eventData["Event Registration Attendee Count"])
     entry["maximumAttendees"] = parseInt(eventData["Event Capacity"])
     entry["startDate"] = eventData["Event Start Date"]
     entry["endDate"] = eventData["Event End Date"]
@@ -145,6 +146,7 @@ let eventSearchHeaders = {
                 'Event End Date',
                 'Event End Time',
                 'Event Capacity',
+                'Event Registration Attendee Count',
                 'Campaign Start Date',
                 'Campaign End Date'
             ],
@@ -170,6 +172,7 @@ var existingClasses = await upcomingView.selectRecordsAsync(
       "Id",
       "Name",
       "summary",
+      "registrantCount",
       "maximumAttendees",
       "startDate",
       "endDate",
@@ -210,6 +213,7 @@ existingClasses = await upcomingView.selectRecordsAsync(
       "Id",
       "Name",
       "summary",
+      "registrantCount",
       "maximumAttendees",
       "startDate",
       "endDate",
