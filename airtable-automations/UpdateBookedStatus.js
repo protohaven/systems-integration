@@ -9,58 +9,66 @@
 // - password = api password from airtable
 // - bookedResourceId = mapped to BookedResourceId in table
 // - status = mapped to Current Status in table
+// - toolName = mapped to Tool Name in table
 
 
-// Get credentials from input variables
+// Get input variables from airtable
 let inputVars = input.config();
+
+// Log Intent of the script for easier debug
+console.log( Date() + "  Triggered to change status of " + inputVars.ToolName + " to " + inputVars.status)
 
 const baseUrl = "https://reserve.protohaven.org";
 let authUrl = baseUrl + "/Web/Services/Authentication/Authenticate"
 let updateUrl = baseUrl + "/Web/Services/Resources/" + inputVars.bookedResourceId
 
-// Prepare login post
+// Prepare login post object
 let loginPost = {
     method: 'POST',
     headers: { 
         'Content-Type': 'application/json'
     },
     body: JSON.stringify({
-            "username": inputVars.username,
-            "password": inputVars.password
-        })
+        username: inputVars.username,
+        password: inputVars.password
+    }),
 }
-console.debug("loginPost", loginPost)
 
-// Authenticate and get sesisonToken
+// Authenticate with booked and get session token
 let authResponse = await fetch(authUrl, loginPost)
 let auth = await authResponse.json()
-console.debug("authResponse", authResponse)
-console.debug("auth", auth)
+//console.debug(auth)
 
-if (auth.sessionToken == null) { 
+if (!auth.sessionToken) { 
+    // We didn't get a session token error the script
     throw auth.message
 }
 
+// Determine if the tool needs to be available (1) or unavailable (2)
+let bookedStatus = 2
 if (inputVars.status.startsWith("Green") || inputVars.status.startsWith("Yellow")){
-    var bookedStatus = 1;
-} else {
-    var bookedStatus = 2;
+    bookedStatus = 1
 }
 
-console.log("Setting " + inputVars.bookedResourceId + " to status " + bookedStatus)
-
-// Prepare update object
+// Prepare update post object
 let updatePost = {
     method: 'POST',
     headers: {
-        "X-Booked-SessionToken": auth.sessionToken, 
-        "X-Booked-UserId": auth.userId
+        'X-Booked-SessionToken': auth.sessionToken, 
+        'X-Booked-UserId': auth.userId
     },
     body: JSON.stringify({
-        "statusId": bookedStatus
+        statusId: bookedStatus,
+        name: inputVars.toolName, // There is this dumb requirement on the post where it currently requires the tool name and schedule id.
+        scheduleId: 1,            // Hopefully this is removed soon I've emailed the maintainer.
     })
 }
-console.debug(updatePost)
-
+//console.debug("updatePost",updateUrl, updatePost)
 var updateResponse = await fetch(updateUrl, updatePost)
-console.log(updateResponse)
+var ur = await updateResponse.json()
+
+if (ur.errors) {
+    throw ur.message + " \n " + ur.errors.join()
+}
+
+console.log("Update response from Booked: ", ur)
