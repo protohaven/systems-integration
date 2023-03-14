@@ -1,5 +1,5 @@
 // SyncRegistrationData.js
-// Sync Class Registration  Data on a schedule
+// Sync Class Registration Data on a schedule
 //
 // Setup:
 // - Create an empty "Class Attendees" table in the Neon base
@@ -105,12 +105,15 @@ for (let event of existingClasses.records){
 
     // for each class in the table pull the attendee data from Neon  
     var attendeeData = await getPaginatedData("/events/" + eventId + "/attendees", "attendees", {method: 'GET',headers: authHeaders})
-    //console.debug("attendeedata",attendeeData)
     for (let attendee of attendeeData){
-        // The values were going to use regarding attendees.
+        // The values were going to use regarding attendee
         let attendeeMemberId = attendee.accountId
         let attendeeMemberRecordId = memberMap[attendeeMemberId]
-        registrantMap.push({eventId, eventRecordId, attendeeMemberId, attendeeMemberRecordId})
+        if(attendeeMemberId == null){
+            console.warn("Attendee doesn't have a member id, likely a guest of a member, this needs to be handled smarter in the future. ", attendeeData)
+        } else {
+            registrantMap.push({eventId, eventRecordId, attendeeMemberId, attendeeMemberRecordId})
+        }
     }
 }
 
@@ -161,6 +164,7 @@ for (let record of registrantMap) {
     }
     if (unfoundRecord == true){
         let recordfields = {}
+        //console.debug("Queueing Addition ",record.eventId, record.attendeeMemberId)
         recordfields["Class"] = [ {id: record.eventRecordId }]
         recordfields["Attendee"] = [{ id: record.attendeeMemberRecordId }]
         createBatch = createBatch.concat({
