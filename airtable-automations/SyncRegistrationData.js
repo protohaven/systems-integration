@@ -6,6 +6,8 @@
 //
 // Input variables to configure:
 // - encodedapikey = b64 encoded api key for neon
+// - batchStart = the first record of the events array to start with in this batch (start with 0)
+// - batchSize = the number of events to process in an invocation of the script, airtable limits a script to 50 fetches. something like 40 would be good here.
 
 
 async function getPaginatedData(endpoint, dataKey, headers) {
@@ -23,6 +25,8 @@ async function getPaginatedData(endpoint, dataKey, headers) {
         var respData = await fetch(baseUrl + `${endpoint}`, headers)
             .then((response) => response.json())
         //console.debug("respData",respData)
+        fetchCount++
+        console.debug("Fetches", fetchCount, "Response", respData)
         if (respData["pagination"] ?? "") {
             totalPages = parseInt(respData["pagination"]["totalPages"] ?? 1) // set the total number of pages
         }
@@ -60,7 +64,8 @@ async function createRecordsFromQueue(recordQueue){
     }
 }
 
-// Get imput vars from Air Table
+// Get input vars from Air Table
+let fetchCount = 0;
 let inputVars = input.config();
 const baseUrl = "https://api.neoncrm.com/v2";
 
@@ -87,6 +92,8 @@ let attendeeTable = base.getTable("Class Attendees")
 let existingAttendees = await attendeeTable.selectRecordsAsync(
     {"fields": ["Class", "Attendee", "classId", "memberId" ]}
 )
+console.info("Registrations in AT", existingAttendees.recordIds.length)
+
 
 // Load Upcoming Classes from Air Table
 let classesTable = base.getTable("Classes");
@@ -94,10 +101,18 @@ let upcomingClassesView = classesTable.getView("Upcoming Classes");
 let existingClasses = await upcomingClassesView.selectRecordsAsync(
     {"fields": [ "Id" ]}
 )
+console.info("Classes in AT", existingClasses.recordIds.length)
 
 // For the upcoming classes query Neon for attendes and Build an array of objects that shows the registrations.
 var registrantMap = []
-for (let event of existingClasses.records){
+
+let batchEnd = (existingClasses.records.length -1 > inputVars.batchStart + inputVars.batchSize) ?inputVars.batchStart + inputVars.batchSize :existingClasses.records.length -1 ;
+console.log("Loading event registration records ids", inputVars.batchStart, batchEnd)
+
+
+for ( let batchIteration=inputVars.batchStart; batchIteration <= batchEnd; batchIteration++){
+    console.debug("event index", batchIteration)
+    let event = existingClasses.records[batchIteration]
     // The values we're going to use regarding events
     let eventId = event.getCellValueAsString("Id")
     let eventRecordId = event.id
@@ -120,31 +135,45 @@ for (let event of existingClasses.records){
 console.log("Found " + existingClasses.records.length + " upcoming classes with " + registrantMap.length + " registrations")
 
 // Find Air Table Registrations not in Neon and Remove them
-let deleteQueue = []
-let deleteBatch = []
-for ( let registration of existingAttendees.records){
-    let registrationClassId = registration.getCellValue("classId")
-    let registrationMemberId = registration.getCellValue("memberId")
-    let unfoundRecord = true
-    
-    for (let record of registrantMap) {
-        //console.debug(registrationClassId , record.eventId,registrationMemberId, record.attendeeMemberId)
-        if ((registrationClassId == record.eventId) && (registrationMemberId == record.attendeeMemberId)) {
-            unfoundRecord = false
+
+if (inputVars.batchStart == 0){
+    // I'm going to take the easy route here and only run the remove on the first batch.  This is inefficient but the 
+    // Other way is a a lot of work.  we wuold need batches to collect records in a temp table and then reconsile those
+    // but that's more churn in AT than this so idk.
+    // Only run deletes on the first batch.  It will remove all registrants outside of the first batch to only 
+    // re-add them in the later batches.  But it seems to be the lowest chrun method.  Another idea is to update a colum
+    // and purge the ones who's column was updated. but lets go simple now.
+
+    console.debug("We only run the delete routine on the first batch, see comments.")
+
+    let deleteQueue = []
+    let deleteBatch = []
+    for ( let registration of existingAttendees.records){
+        let registrationClassId = registration.getCellValue("classId")
+        let registrationMemberId = registration.getCellValue("memberId")
+        let unfoundRecord = true
+        
+        for (let record of registrantMap) {
+            //console.debug(registrationClassId , record.eventId,registrationMemberId, record.attendeeMemberId)
+            if ((registrationClassId == record.eventId) && (registrationMemberId == record.attendeeMemberId)) {
+                unfoundRecord = false
+            }
+        }
+        if (unfoundRecord == true) {
+            let deleteRegistrationInfo = registration
+            deleteBatch = deleteBatch.concat(deleteRegistrationInfo)       
+        }
+        if (deleteBatch.length == 50){
+            deleteQueue = deleteQueue.concat({deleteBatch})
+            deleteBatch = []
         }
     }
-    if (unfoundRecord == true) {
-        let deleteRegistrationInfo = registration
-        deleteBatch = deleteBatch.concat(deleteRegistrationInfo)       
-    }
-    if (deleteBatch.length == 50){
-        deleteQueue = deleteQueue.concat({deleteBatch})
-        deleteBatch = []
-    }
+    deleteQueue = deleteQueue.concat([deleteBatch])
+    await deleteRecordsFromQueue(deleteQueue)
+    console.log("Deleted records:", deleteQueue)
+
+
 }
-deleteQueue = deleteQueue.concat([deleteBatch])
-await deleteRecordsFromQueue(deleteQueue)
-console.log("Deleted records:", deleteQueue)
 
 // Find Neon Data registrations not in Air Table and add them.
 let createQueue = []
