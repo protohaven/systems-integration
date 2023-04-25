@@ -5,7 +5,7 @@
 // - Create an empty "Classes" table in the Neon base
 //
 // Input variables to configure:
-// - apikey = b64 encoded api key for neon
+// - encodedapikey = b64 encoded api key for neon
 
 
 async function getPaginatedData(endpoint, dataKey, headers) {
@@ -58,6 +58,7 @@ function formatEntry(eventData){
     entry["endDate"] = eventData["Event End Date"]
     entry["startTime"] = eventData["Event Start Time"]
     entry["endTime"] = eventData["Event End Time"]
+    entry["Archived"] = eventData["Event Archive"]
     entry["registrationOpenDate"] = ""
 
     let eventDate = new Date(eventData["Event Start Date"])
@@ -114,7 +115,7 @@ let upcomingView = classesTable.getView("Upcoming Classes");
 // Get All Events for the next 3 weeks
 
 let date = new Date()
-date.setDate(date.getDate() - 1);
+date.setDate(date.getDate() - 2);
 let yesterdayStr = date.toISOString().split('T')[0]
 
 date.setDate(date.getDate() + 21);
@@ -146,6 +147,7 @@ let eventSearchHeaders = {
                 'Event End Date',
                 'Event End Time',
                 'Event Capacity',
+                'Event Archive',
                 'Event Registration Attendee Count',
                 'Campaign Start Date',
                 'Campaign End Date'
@@ -165,7 +167,7 @@ for (var event of eventData){
   eventInfo[event["Event ID"]] = formatEntry(event)
 }
 
-// grab the existing users
+// grab the existing classes
 var existingClasses = await upcomingView.selectRecordsAsync(
   {"fields": 
     [
@@ -206,7 +208,7 @@ await deleteRecordsFromQueue(deleteQueue)
 console.log("Deleted records:")
 console.log(deleteQueue)
 
-// grab the existing users
+// grab the existing classes
 existingClasses = await upcomingView.selectRecordsAsync(
   {"fields": 
     [
