@@ -610,10 +610,12 @@ Function EnableWiFiSense {
 
 Function DisableIPV6ChecksumOffload {
     # this is a thing that was a fix for poor network performance on the verizon router.
+    Write-Host "Disabling IPv6 Checksum Offload..."
     Disable-NetAdapterChecksumOffload -Name "*" -TcpIPv6
 }
 
 Function EnableIPV6ChecksumOffload {
+    Write-Host "Enabling IPv6 Checksum Offload..."
     Enable-NetAdapterChecksumOffload -Name "*" -TcpIPv6
 }
 # Disable SmartScreen Filter
@@ -2748,6 +2750,7 @@ Function InstallWinGet {
 }
 
 Function SetWallPaper {
+    Write-Host "Setting Wallpaper..."
     Set-ItemProperty -path 'HKCU:\Control Panel\Desktop\' -name Wallpaper -value "c:\Utilities\Downloads\wallpaper.jpg"
     Set-ItemProperty -path 'HKCU:\Control Panel\Desktop\' -name TileWallpaper -value "0"
     Set-ItemProperty -path 'HKCU:\Control Panel\Desktop\' -name WallpaperStyle -value "10" -Force
