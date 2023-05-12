@@ -138,7 +138,8 @@ $Configuration = @'
     "RemoveDefaultPrinters",
     "DisableAutoHideTaskbar",
     "EnableFullScreenStartMenu",
-    "SetWallpaper"
+    "SetWallpaper",
+    "DisableIPV6ChecksumOffload"
 ]
 '@
 
@@ -607,6 +608,14 @@ Function EnableWiFiSense {
     Remove-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\WcmSvc\wifinetworkmanager\config" -Name "WiFISenseAllowed" -ErrorAction SilentlyContinue
 }
 
+Function DisableIPV6ChecksumOffload {
+    # this is a thing that was a fix for poor network performance on the verizon router.
+    Disable-NetAdapterChecksumOffload -Name "*" -TcpIPv6
+}
+
+Function EnableIPV6ChecksumOffload {
+    Enable-NetAdapterChecksumOffload -Name "*" -TcpIPv6
+}
 # Disable SmartScreen Filter
 Function DisableSmartScreen {
     Write-Host "Disabling SmartScreen Filter..."
