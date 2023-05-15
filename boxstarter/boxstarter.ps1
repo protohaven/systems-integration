@@ -191,7 +191,7 @@ $ManualDownloadInstall = @{
    'Amana-Tool-Vectric.tool' = 'https://www.amanatool.com/pub/media/vectriclibrary/Amana-Tool-Vectric.tool'
    'Whiteside-Vectric-File-Library.tool' = 'https://www.dropbox.com/sh/3n5m5mxybdl98da/AAB9Qy_Z-c6z5w_F1Kcuopaga?dl=1&preview=Whiteside+Vectric+File+Library.tool'
    'BitsBits-Vectric-Tool-Library.V1.3.5.zip' = 'https://bitsbits.com/wp-content/uploads/2022/03/BitsBits-Vectric-Tool-Library.V1.3.5.zip'
-   'PrusaSlicer-2.6.0-alpha6.zip' = 'https://github.com/prusa3d/PrusaSlicer/releases/download/version_2.6.0-alpha6/PrusaSlicer-2.6.0-alpha6+win64-202303311519_signed.zip'
+   'PrusaSlicer-2.6.0-beta1.zip' = 'https://github.com/prusa3d/PrusaSlicer/releases/download/version_2.6.0-beta1/PrusaSlicer-2.6.0-beta1+win64-202305121513.zip'
 }
 
 $WebShortCuts = @{
