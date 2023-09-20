@@ -1,5 +1,6 @@
 // SyncRegistrationData.js
 // Sync Class Registration Data on a schedule
+// https://github.com/protohaven/systems-integration/blob/main/airtable-automations/SyncRegistrationData.js
 //
 // Setup:
 // - Create an empty "Class Attendees" table in the Neon base
@@ -8,6 +9,11 @@
 // - encodedapikey = b64 encoded api key for neon
 // - batchStart = the first record of the events array to start with in this batch (start with 0)
 // - batchSize = the number of events to process in an invocation of the script, airtable limits a script to 50 fetches. something like 40 would be good here.
+//
+// - Neon API Specification: https://developer.neoncrm.com/api-v2/#/
+// - Airtable Scripting Documentation: https://www.airtable.com/developers/scripting
+// - Airtable Scripting API Reference: https://www.airtable.com/developers/scripting/api
+// - Airtable Scripting Object Reference: https://www.airtable.com/developers/scripting/guides/record-model
 
 
 async function getPaginatedData(endpoint, dataKey, headers) {

@@ -138,7 +138,8 @@ $Configuration = @'
     "RemoveDefaultPrinters",
     "DisableAutoHideTaskbar",
     "EnableFullScreenStartMenu",
-    "SetWallpaper"
+    "SetWallpaper",
+    "DisableIPV6ChecksumOffload"
 ]
 '@
 
@@ -178,9 +179,9 @@ $ManualDownloadInstall = @{
    'TheBoldFont.zip' = 'https://dl.dafont.com/dl/?f=the_bold_font'
    'Explora.zip' = 'https://fonts.google.com/download?family=Explora'
    'CH341SER.EXE' = 'https://cdn.sparkfun.com/assets/learn_tutorials/8/4/4/CH341SER.EXE'
-   'inkstitch-v2.2.0-windows.exe' = 'https://github.com/inkstitch/inkstitch/releases/latest/download/inkstitch-v2.2.0-windows.exe'
+   'inkstitch-v3.0.1-windows.exe' = 'https://github.com/inkstitch/inkstitch/releases/download/v3.0.1/inkstitch-v3.0.1-windows.exe'
    'SPM_Win64_v10.2.0.3808_online.exe' = 'https://www.sawgrassink.com/spm/windows/'
-   'SheetCam%20TNG%20setup%20V7.0.20.exe' = 'https://www.sheetcam.com/Downloads/akp3fldwqh/SheetCam%20TNG%20setup%20V7.0.20.exe'
+   'SheetCam%20TNG%20setup%20V7.0.21.exe' = 'https://www.sheetcam.com/Downloads/akp3fldwqh/SheetCam%20TNG%20setup%20V7.0.21.exe'
    'VCarveProTrialEditionV11_SetupENU.exe' = 'https://storage.vectric.com/VCarveProTrialEditionV11_SetupENU.exe'
    'RDWorksV8Setup8.01.62.zip' = 'https://www.thunderlaser.com/download/RDworks/RDWorksV8Setup8.01.62.zip'
    'RebootRestoreRx3.zip' = 'https://horizondatasys.com/downloads/RebootRestoreRx3.zip'
@@ -190,7 +191,6 @@ $ManualDownloadInstall = @{
    'Amana-Tool-Vectric.tool' = 'https://www.amanatool.com/pub/media/vectriclibrary/Amana-Tool-Vectric.tool'
    'Whiteside-Vectric-File-Library.tool' = 'https://www.dropbox.com/sh/3n5m5mxybdl98da/AAB9Qy_Z-c6z5w_F1Kcuopaga?dl=1&preview=Whiteside+Vectric+File+Library.tool'
    'BitsBits-Vectric-Tool-Library.V1.3.5.zip' = 'https://bitsbits.com/wp-content/uploads/2022/03/BitsBits-Vectric-Tool-Library.V1.3.5.zip'
-   'PrusaSlicer-2.6.0-alpha2.zip' = 'https://github.com/prusa3d/PrusaSlicer/releases/download/version_2.6.0-alpha2/PrusaSlicer-2.6.0-alpha2+win64-202301311700_signed.zip'
 }
 
 $WebShortCuts = @{
@@ -607,6 +607,14 @@ Function EnableWiFiSense {
     Remove-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\WcmSvc\wifinetworkmanager\config" -Name "WiFISenseAllowed" -ErrorAction SilentlyContinue
 }
 
+Function DisableIPV6ChecksumOffload {
+    # this is a thing that was a fix for poor network performance on the verizon router.
+    Disable-NetAdapterChecksumOffload -Name "*" -TcpIPv6
+}
+
+Function EnableIPV6ChecksumOffload {
+    Enable-NetAdapterChecksumOffload -Name "*" -TcpIPv6
+}
 # Disable SmartScreen Filter
 Function DisableSmartScreen {
     Write-Host "Disabling SmartScreen Filter..."
