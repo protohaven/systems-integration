@@ -1,5 +1,7 @@
 // When Tool status changes update reservable status in Booked Scheduler
 // Trigger when status field changes on tools.
+// https://github.com/protohaven/systems-integration/blob/main/airtable-automations/UpdateBookedStatus.js
+
 //
 // Setup:
 // -Automation for Tools & Equipment Base that is watching the Current Status field of the Grid view of the Tool Records Table
@@ -10,6 +12,11 @@
 // - bookedResourceId = mapped to BookedResourceId in table
 // - status = mapped to Current Status in table
 // - toolName = mapped to Tool Name in table
+//
+// - Neon API Specification: https://developer.neoncrm.com/api-v2/#/
+// - Airtable Scripting Documentation: https://www.airtable.com/developers/scripting
+// - Airtable Scripting API Reference: https://www.airtable.com/developers/scripting/api
+// - Airtable Scripting Object Reference: https://www.airtable.com/developers/scripting/guides/record-model
 
 
 // Get input variables from airtable

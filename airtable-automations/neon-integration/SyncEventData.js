@@ -1,11 +1,17 @@
 // SyncEventData.js
 // Sync Class Data on a schedule
+// https://github.com/protohaven/systems-integration/blob/main/airtable-automations/neon-integration/SyncEventData.js
 //
 // Setup:
 // - Create an empty "Classes" table in the Neon base
 //
 // Input variables to configure:
 // - encodedapikey = b64 encoded api key for neon
+//
+// - Neon API Specification: https://developer.neoncrm.com/api-v2/#/
+// - Airtable Scripting Documentation: https://www.airtable.com/developers/scripting
+// - Airtable Scripting API Reference: https://www.airtable.com/developers/scripting/api
+// - Airtable Scripting Object Reference: https://www.airtable.com/developers/scripting/guides/record-model
 
 
 async function getPaginatedData(endpoint, dataKey, headers) {

@@ -1,5 +1,6 @@
 // SyncMemberData.js
 // Keep the active member status synced with the Booked group
+// https://github.com/protohaven/systems-integration/blob/main/airtable-automations/SyncBookedMembers.js
 //
 // Setup:
 // 
@@ -7,6 +8,12 @@
 // Input variables to configure:
 // - username = api username from airtable
 // - password = api password from airtable
+//
+// - Booked API Specification: https://www.bookedscheduler.com/api/
+// - Airtable Scripting Documentation: https://www.airtable.com/developers/scripting
+// - Airtable Scripting API Reference: https://www.airtable.com/developers/scripting/api
+// - Airtable Scripting Object Reference: https://www.airtable.com/developers/scripting/guides/record-model
+
 
 async function updateRecordsFromQueue(recordQueue){
 // The record queue contains batches of 50 so that we can do an updateRecordsAsync
