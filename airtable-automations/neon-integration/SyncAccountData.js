@@ -32,6 +32,9 @@ async function getPaginatedData(endpoint, dataKey, headers){
     if (respData["pagination"] ?? ""){
         totalPages = parseInt(respData["pagination"]["totalPages"] ?? 1) // set the total number of pages
       }
+    if (currentPage == 0){
+        console.debug("getPaginatedData totalPages", totalPages)
+    }
     
     if (respData[dataKey] ?? ""){
       var newData = respData[dataKey]
@@ -113,6 +116,11 @@ let authHeaders = {
         'Authorization': 'Basic ' + inputVars.encodedapikey
     }
 
+let getHeaders = {
+    method: 'GET',
+    headers: authHeaders,
+}
+
 // Get All Accounts
 
 let memberSearchHeaders = {
@@ -143,7 +151,7 @@ let memberSearchHeaders = {
 }
 
 var membershipData = await getPaginatedData("/accounts/search", "searchResults", memberSearchHeaders)
-
+console.debug("Records received from pulling Neon membershipData", membershipData.length)
 var membershipInfo = {}
 for (var member of membershipData){
   membershipInfo[member["Account ID"]] = formatEntry(member)
@@ -166,6 +174,7 @@ var existingMembers = await membersTable.selectRecordsAsync(
     ]
   }
 )
+console.debug("Records received pulling airtable existingMembers", existingMembers.records.length)
 
 // update information for all existing members
 
